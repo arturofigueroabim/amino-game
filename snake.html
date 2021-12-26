@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style>
+  body {
+    margin:0;
+    padding:0;
+    background:#f2f2f2;
+    
+  }
+  canvas {
+    float:right;
+    background: black;
+    border: 1px solid white;
+  }
+  #menuLeft{
+    margin:0;
+    padding:0;
+    height: 800px;
+    width:  630px;
+    float: left;
+  }
+
+  #titulo{
+    padding-top: 52px;
+    height: 125px;
+    width:  630px;
+    text-align:center;
+    float: left;
+    background-image: url('/Users/arturofigueroa/Desktop/amino_game/ProQR_Axiomer_cartoon_1-4.jpg');
+    color: black;
+  }
+  #rnaCadena{
+    height: 10px;
+    width:  10px;
+
+  }
+
+  .contenedor{
+  margin: 10px auto;
+  width: 540px;
+  height: 115px;
+  padding-left: 200px;
+  float: left;
+}
+
+.contenedorAmino{
+  margin: 10px auto;
+  width: 540px;
+  height: 225px;
+  padding-left: 200px;
+  float: left;
+}
+.contenedorScore{
+  margin: 10px auto;
+  width: 540px;
+  height: 115px;
+  padding-left: 120px;
+  float: left;
+}
+#btnStart{
+  margin: 10px auto;
+  width: 540px;
+  height: 30px;
+  float: left;
+  padding-left: 150px;
+
+}
+.reloj{
+  float: left;
+  font-size: 80px;
+  font-family: Courier,sans-serif;
+  color: #363431;
+}
+
+.amino{
+  padding-right: 200px;
+  float: left;
+  font-size: 50px;
+  font-family: Courier,sans-serif;
+  color: #363431;
+}
+.colores{
+display: inline-block;
+float: left;
+ width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  margin-right: 10px;
+}
+
+.boton{
+  outline: none;
+  border: 1px solid #363431;
+  color: white;
+  width: 330px;
+  height: 30px;
+  text-shadow: 0px -1px 1px black;
+  font-size: 20px;
+  border-radius: 5px;
+  font-family: Helvetica;
+  cursor: pointer;
+  background-image: linear-gradient(#3aad02,#2c6f05);
+}
+.boton:active{
+  background-image: linear-gradient(#2c6f05,#3aad02);
+}
+.boton:hover{
+  box-shadow: 0px 0px 14px #3aad02;
+}
+
+  </style>
+</head>
+<body>
+
+<div id="menuLeft">
+<div  id="titulo" >
+  <h1>Debora Aminos</h1>
+</div>
+
+<div class="contenedor">
+    <div class="reloj" id="Segundos">00</div>
+    <div class="reloj" id="Centesimas">:00</div>
+</div>
+<div id="btnStart">
+  <input type="button" class="boton" id="inicio" value="Start &#9658;" onclick="inicio();">
+</div>
+
+<div class="contenedorAmino">          
+      <div class="amino" id="amino1">
+        <div class ="colores"  style="background-color:yellow"></div>
+      Adenina
+      </div>
+      <div class="amino" id="amino2">
+      <div class ="colores" style="background-color:blue"></div>
+      Guanina</div>
+      <div class="amino" id="amino3">
+        <div class ="colores" style="background-color:red"></div>
+      Uracilo</div>
+      <div class="amino" id="amino3">
+          <div class ="colores" style="background-color:green"></div>
+      Citocina
+    </div>
+  </div>
+
+<div class="contenedorScore">
+    <div class="reloj" >Score:</div>
+    <div class="reloj" id="Score">00</div>
+</div>
+
+</div>
+  <canvas width="800" height="800" id="game"></canvas>
+
+<script>
+var canvas = document.getElementById('game');
+var context = canvas.getContext('2d');
+var grid = 16;
+var count = 0;
+var color = ["red"];
+var RNA =   [];
+
+var centesimas = 0;
+var segundos = 0;
+var reinicioTimer = false;
+var score = 0;
+
+function inicio () {
+  control = setInterval(cronometro,10);
+  document.getElementById("inicio").disabled = true;
+
+  reinicioTimer = true;
+  
+  requestAnimationFrame(loop);
+
+}
+
+function reinicio () {
+  clearInterval(control);
+  centesimas = 0;
+  segundos = 0;
+  minutos = 0;
+  horas = 0;
+  Centesimas.innerHTML = ":00";
+  Segundos.innerHTML = "00";
+  score = 0; 
+  reinicioTimer = false;
+  snake.x = 160;
+  snake.y = 160;
+  snake.cells = [];
+  snake.maxCells = 1;
+  snake.dx = grid;
+  snake.dy = 0;
+  color = ["red"];
+  document.getElementById("inicio").disabled = false;
+}
+function cronometro () {
+  if (centesimas < 99) {
+    centesimas++;
+    if (centesimas < 10) { centesimas = "0"+centesimas }
+    Centesimas.innerHTML = ":"+centesimas;
+  }
+  if (centesimas == 99) {
+    centesimas = -1;
+  }
+  if (centesimas == 0) {
+    segundos ++;
+    if (segundos < 10) { segundos = "0"+segundos }
+    Segundos.innerHTML =segundos;
+  }
+  if (segundos == 59) {
+    segundos = -1;
+    reinicio();
+
+  }
+}
+
+
+var snake = {
+  x: 1280,
+  y: 1280,
+  
+  // snake velocity. moves one grid length every frame in either the x or y direction
+  dx: grid,
+  dy: 0,
+  
+  // keep track of all grids the snake body occupies
+  
+
+  cells: [],
+  
+  // length of the snake. grows when eating an apple
+  maxCells: 1
+};
+
+
+var apple = {
+  x: 320,
+  y: 320
+};
+
+//Creando manzana dos
+var apple2 ={
+  x:640,
+  y:640
+}; 
+
+//Creando manzana dos
+var apple3 ={
+  x:160,
+  y:160
+};
+
+//Creando manzana dos
+var apple4 ={
+  x:80,
+  y:80
+};
+// get random whole numbers in a specific range
+// @see https://stackoverflow.com/a/1527820/2124254
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+// game loop
+function loop() {
+
+  if(reinicioTimer == true){
+     requestAnimationFrame(loop);
+  }
+ 
+  // slow game loop to 15 fps instead of 60 (60/15 = 4)
+  if (++count < 4) {
+    return;
+  }
+  count = 0;
+  context.clearRect(0,0,canvas.width,canvas.height);
+  // move snake by it's velocity
+  snake.x += snake.dx;
+  snake.y += snake.dy;
+  // wrap snake position horizontally on edge of screen
+  if (snake.x < 0) {
+    snake.x = canvas.width - grid;
+  }
+  else if (snake.x >= canvas.width) {
+    snake.x = 0;
+  }
+  
+  // wrap snake position vertically on edge of screen
+  if (snake.y < 0) {
+    snake.y = canvas.height - grid;
+  }
+  else if (snake.y >= canvas.height) {
+    snake.y = 0;
+  }
+  // keep track of where snake has been. front of the array is always the head
+  snake.cells.unshift({x: snake.x, y: snake.y});
+  // remove cells as we move away from them
+  if (snake.cells.length > snake.maxCells) {
+    snake.cells.pop();
+  }
+  // draw apple
+  context.fillStyle = 'yellow';
+  context.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+  //Manzana 2
+  context.fillStyle = 'blue';
+  context.fillRect(apple2.x, apple2.y, grid-1, grid-1);
+
+  //Manzana 2
+  context.fillStyle = 'red';
+  context.fillRect(apple3.x, apple3.y, grid-1, grid-1);
+
+  //Manzana 2
+  context.fillStyle = 'green';
+  context.fillRect(apple4.x, apple4.y, grid-1, grid-1);
+
+  // draw snake one cell at a time
+  context.fillStyle = color[0];
+
+  snake.cells.forEach(function(cell, index) {
+    
+    // drawing 1 px smaller than the grid creates a grid effect in the snake body so you can see how long it is
+    //context.fillStyle = color[index];
+    context.fillStyle = color[index];
+    context.fillRect(cell.x, cell.y, grid-1, grid-1);  
+    // snake ate apple
+    if (cell.x === apple.x && cell.y === apple.y ) {
+         color.push("yellow");
+      snake.maxCells++;
+      
+      flag = true;
+      // canvas is 400x400 which is 25x25 grids 
+      apple.x = getRandomInt(0, 25) * grid;
+      apple.y = getRandomInt(0, 25) * grid;
+
+
+      apple2.x = getRandomInt(0, 25) * grid;
+      apple2.y = getRandomInt(0, 25) * grid;
+
+
+      apple3.x = getRandomInt(0, 25) * grid;
+      apple3.y = getRandomInt(0, 25) * grid;
+
+      apple4.x = getRandomInt(0, 25) * grid;
+      apple4.y = getRandomInt(0, 25) * grid;
+  
+    } else if(cell.x === apple2.x && cell.y === apple2.y){
+            color.push("blue");
+            snake.maxCells++;
+           
+            flag = true;
+      apple.x = getRandomInt(0, 25) * grid;
+      apple.y = getRandomInt(0, 25) * grid;
+
+
+      apple2.x = getRandomInt(0, 25) * grid;
+      apple2.y = getRandomInt(0, 25) * grid;
+
+
+      apple3.x = getRandomInt(0, 25) * grid;
+      apple3.y = getRandomInt(0, 25) * grid;
+
+      apple4.x = getRandomInt(0, 25) * grid;
+      apple4.y = getRandomInt(0, 25) * grid;
+        
+    } else if(cell.x === apple3.x && cell.y === apple3.y){
+            color.push("red");
+            snake.maxCells++;
+            
+            flag = true;
+      apple.x = getRandomInt(0, 25) * grid;
+      apple.y = getRandomInt(0, 25) * grid;
+
+
+      apple2.x = getRandomInt(0, 25) * grid;
+      apple2.y = getRandomInt(0, 25) * grid;
+
+
+      apple3.x = getRandomInt(0, 25) * grid;
+      apple3.y = getRandomInt(0, 25) * grid;
+
+      apple4.x = getRandomInt(0, 25) * grid;
+      apple4.y = getRandomInt(0, 25) * grid;
+        
+    }else  if(cell.x === apple4.x && cell.y === apple4.y){
+            color.push("green");
+            snake.maxCells++;
+           
+            flag = true;
+      apple.x = getRandomInt(0, 25) * grid;
+      apple.y = getRandomInt(0, 25) * grid;
+
+
+      apple2.x = getRandomInt(0, 25) * grid;
+      apple2.y = getRandomInt(0, 25) * grid;
+
+
+      apple3.x = getRandomInt(0, 25) * grid;
+      apple3.y = getRandomInt(0, 25) * grid;
+
+      apple4.x = getRandomInt(0, 25) * grid;
+      apple4.y = getRandomInt(0, 25) * grid;
+        
+    }
+
+    Score.innerHTML = score;
+
+      // check collision with all cells after this one (modified bubble sort)
+
+
+  
+    // check collision with all cells after this one (modified bubble sort)
+    for (var i = index + 1; i < snake.cells.length; i++) {
+      
+      // snake occupies same space as a body part. reset game
+      if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+        snake.x = 160;
+        snake.y = 160;
+        snake.cells = [];
+        color = ["red"];
+        snake.maxCells = 1;
+        snake.dx = grid;
+        snake.dy = 0;
+        apple.x = getRandomInt(0, 25) * grid;
+        apple.y = getRandomInt(0, 25) * grid;
+        apple2.x = getRandomInt(0, 25) * grid;
+        apple2.y = getRandomInt(0, 25) * grid;
+        apple3.x = getRandomInt(0, 25) * grid;
+        apple3.y = getRandomInt(0, 25) * grid;
+        apple4.x = getRandomInt(0, 25) * grid;
+        apple4.y = getRandomInt(0, 25) * grid;
+      }
+    }
+    
+     
+  });
+
+if(flag == true){
+
+    if( 2 < snake.cells.length ){
+       
+       var final = color.length-1;
+   // for (var i = 3; i > 0; i--) {
+        var RNA1 = color[final-2];
+        var RNA2 = color[(final-2+1)];
+        var RNA3 = color[final];
+
+    if(RNA1 == RNA2 && RNA2 == RNA3 && RNA3 == "red"){
+              alert("Fenilalanina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+    if(RNA1 == RNA2 && RNA2 == RNA3 && RNA3 == "green"){
+              alert("Prolina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == RNA2 && RNA2 == RNA3 && RNA3 == "yellow"){
+              alert("lisina!!!");
+               score = score + 10; 
+              flag = false;
+
+      }
+
+    if(RNA1 == RNA2 && RNA2 == RNA3 && RNA3 == "blue"){
+              alert("lisina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+    
+    if(RNA1 == "red" && RNA2 == "green" && RNA3 == "yellow"){
+              alert("Serina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "red" && RNA2 == "green" && RNA3 == "blue"){
+              alert("Serina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "green" && RNA2 == "yellow" && RNA3 == "blue"){
+              alert("Glutamina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "green" && RNA2 == "yellow" && RNA3 == "red"){
+              alert("Histidina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "yellow" && RNA2 == "green" && RNA3 == "blue"){
+              alert("Treonina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "yellow" && RNA2 == "blue" && RNA3 == "green"){
+              alert("Serina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "yellow" && RNA2 == "blue" && RNA3 == "red"){
+              alert("Serina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "green" && RNA2 == "blue" && RNA3 == "yellow"){
+              alert("Arginina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "yellow" && RNA2 == "red" && RNA3 == "blue"){
+              alert("Metionina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+    if(RNA1 == "green" && RNA2 == "green" && RNA3 == "red"){
+              alert("Prolina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+    if(RNA1 == "blue" && RNA2 == "blue" && RNA3 == "yellow"){
+              alert("Glicina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+    if(RNA1 == "blue" && RNA2 == "green" && RNA3 == "yellow"){
+              alert("Valina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+      if(RNA1 == "green" && RNA2 == "red" && RNA3 == "yellow"){
+              alert("Leucina!!!");
+               score = score + 10; 
+              flag = false;
+      }
+
+     }
+
+}
+
+
+}
+// listen to keyboard events to move the snake
+document.addEventListener('keydown', function(e) {
+  // prevent snake from backtracking on itself by checking that it's 
+  // not already moving on the same axis (pressing left while moving
+  // left won't do anything, and pressing right while moving left
+  // shouldn't let you collide with your own body)
+  
+  // left arrow key
+  if (e.which === 37 && snake.dx === 0) {
+    snake.dx = -grid;
+    snake.dy = 0;
+  }
+  // up arrow key
+  else if (e.which === 38 && snake.dy === 0) {
+    snake.dy = -grid;
+    snake.dx = 0;
+  }
+  // right arrow key
+  else if (e.which === 39 && snake.dx === 0) {
+    snake.dx = grid;
+    snake.dy = 0;
+  }
+  // down arrow key
+  else if (e.which === 40 && snake.dy === 0) {
+    snake.dy = grid;
+    snake.dx = 0;
+  }
+});
+
+</script>
+</body>
+</html>
